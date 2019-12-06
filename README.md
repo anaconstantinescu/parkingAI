@@ -1,9 +1,9 @@
-#ParkingAI
+# ParkingAI
 
 This is a tehnical demo made to show what could be done when useing tehnology to eficently enfore parking rules and detect parking violations useing AI.
 The tehnical demo uses a the Bucharest streets as refeance for AI training because parking violations are more frequent so it takes less sample data to train.
 
-##Numberplate format
+## Numberplate format
 
 Full Numer
 ```
