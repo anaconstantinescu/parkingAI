@@ -27,8 +27,24 @@ def create_plate_dict(images_d):
 
 def write_csv(dictionary, filename):
 	with open(filename, 'w') as fd:
+		items = dictionary.keys()
+		keys = dictionary[items[0]].keys()
+		if keys[1] == 'PlatesList':
+			dict_name = 'ImageName'
+			keys.insert(0,dict_name)
+		else:
+			if keys[1] == 'ImageList':
+				dict_name = 'PlateValue'
+				keys.insert(0,dict_name)
+		for item in keys:
+			fd.write("%s\t"%(item))
+		fd.write("\n")
 		for key in dictionary.keys():
-			fd.write("%s,%s\n"%(key,dictionary[key]))
+			fd.write("%s\t"%(key))
+			for item in keys[1:]:
+				fd.write("%s\t"%(dictionary[key][item]))
+			fd.write("\n")
+#			fd.write("%s,%s\n"%(key,dictionary[key]))
 
 def read_csv(csvfile, images_d):
 	with open(csvfile) as fd:
