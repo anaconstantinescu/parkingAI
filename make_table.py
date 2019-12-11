@@ -2,9 +2,82 @@
 
 from PIL import Image
 from PIL import ExifTags
-import os
 
-def
+import csv
+import os
+import re
+
+
+def create_plate_dict(images_d):
+	plates_d = {}
+	for image in images_d:
+		plates = images_d[image]['PlatesList']
+		for plate in plates:
+			if plate in plates_d:
+				plates_d[plate]['ImageList'].append(image) 
+				plates_d[plate]['TimeStamp'].append(images_d[image]['TimeStamp'])
+				plates_d[plate]['GPS'].append(images_d[image]['GPS']) 
+			else:
+				plates_d[plate] = {
+				'ImageList': [image],
+				'TimeStamp': [images_d[image]['TimeStamp']],
+				'GPS': [images_d[image]['GPS']]
+				}
+	return plates_d
+
+def write_csv(dictionary, filename):
+	with open(filename, 'w') as fd:
+		for key in dictionary.keys():
+			fd.write("%s,%s\n"%(key,dictionary[key]))
+
+def read_csv(csvfile, images_d):
+	with open(csvfile) as fd:
+		image_details = {}
+		for line in fd:
+			detail = line.split(',')
+			img = detail[0].split('\n')
+			img = img[0]
+			img = img + ".JPG"
+
+			plates = []
+			if len(detail) > 1:
+				plates = detail[1:]
+				plates[-1] = plates[-1][:-1]
+
+#			images_d[img]['PlatesList'] = plates
+
+#			print plates
+			for plate in plates:
+#				pattern_black1 = re.compile(r'^(B|AB|AR|AG|BC|BH|BN|BT|BV|BR|BZ|CS|CL|CJ|CT|CV|DB|DJ|GL|GR|GJ|HR|HD|IL|IS|IF|MM|MH|MS|NT|OT|PH|SM|SJ|SB|SV|TR|TM|TL|VS|VL|VN)[0-9]{2,3}[a-z]{3}$')
+#				pattern_red1 = re.compile(r'^(B|AB|AR|AG|BC|BH|BN|BT|BV|BR|BZ|CS|CL|CJ|CT|CV|DB|DJ|GL|GR|GJ|HR|HD|IL|IS|IF|MM|MH|MS|NT|OT|PH|SM|SJ|SB|SV|TR|TM|TL|VS|VL|VN)[0-9]{3,7}$')
+				pattern_black = re.compile(r'^[A-Z]{1,2}[0-9]{2,3}[A-Z]{3}$')
+				pattern_red = re.compile(r'^[A-Z]{1,2}[0-9]{3,6}$') 
+				match_black = pattern_black.search(plate)
+				match_red = pattern_red.search(plate)
+				if match_black or match_red:
+#					print plate
+					continue
+				else:
+					plates = filter(lambda a: a != plate, plates)
+			images_d[img]['PlatesList'] = plates
+	return images_d
+
+def get_files(directory, images_d):
+	for filename in os.listdir(directory):
+		image_details = {}
+		if filename.endswith(".JPG") or filename.endswith(".jpg"): 
+			file_path = os.path.join(directory, filename)
+#			print(file_path)
+			exif = get_info(file_path)
+
+			image_details['TimeStamp'] = exif['DateTime']
+			image_details['GPS'] = get_decimal_coordinates(exif['GPSInfo'])
+			images_d[os.path.join(filename)] = image_details
+#			print exif['DateTime']
+#			print get_decimal_coordinates(exif['GPSInfo'])
+	return images_d
+
+
 
 
 def get_info(imagename):
@@ -52,6 +125,12 @@ def get_decimal_coordinates(info):
 
 
 if __name__ == '__main__':
-	exif = get_info('images/G0587646.JPG')
-	print exif['DateTime']
-	print get_decimal_coordinates(exif['GPSInfo'])
+	images_d = {}
+	images_d = get_files('../images', images_d)
+	images_d = read_csv('results.csv', images_d)
+	write_csv(images_d, 'image_dictionary.csv')
+	plates_d = create_plate_dict(images_d)
+	write_csv(plates_d, 'plates_dictionary.csv')
+#	for key in images_d.keys():
+#		print images_d[key]
+#	print images_d
