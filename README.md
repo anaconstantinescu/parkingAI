@@ -25,7 +25,7 @@ r"[a-z]{1,2}[0-9]{3,6}"gmi
 ```
 
 ## Database Specs
-The data for the test will be found [CSV](data.csv)
+The data for the test will be found [CSV](plate_dictionary.csv)
 
 ## Database structure
 
